@@ -8,6 +8,8 @@ Colorization is done through Google's RE2 regex library.
 
 Greatly inspired by https://github.com/hSaria/ChromaTerm/ that is now archived, but designed to be faster.
 
+![Example of visualization](https://github.com/LouisDuVerdier/cppchroma/raw/main/docs/cppchroma_example.png "Example of visualization")
+
 ## Setup Instructions
 
 ```
