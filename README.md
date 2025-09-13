@@ -25,7 +25,7 @@ make
 ./cppchroma <command> <arguments>
 ```
 
-For example to colorize the output of a bash session:
+For example, to colorize the output of a bash session:
 ```
 ./cppchroma bash
 ```
