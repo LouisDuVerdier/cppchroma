@@ -34,13 +34,35 @@ namespace Helpers
     template<typename T>
     inline void unused(const T &&) {}
 
-    void setNonBlocking(int fd)
+    inline void setNonBlocking(int fd)
     {
         int flags = fcntl(fd, F_GETFL);
         if (flags == -1)
             throw std::runtime_error("fcntl F_GETFL failed");
         if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
             throw std::runtime_error("fcntl F_SETFL O_NONBLOCK failed");
+    }
+
+    inline ssize_t writeAllToFd(int fd, const char *buf, size_t bufferSize)
+    {
+        const char *p = buf;
+        size_t bytesLeft = bufferSize;
+
+        while (bytesLeft)
+        {
+            ssize_t written = write(fd, p, bytesLeft);
+            if (written > 0)
+            {
+                bytesLeft -= written;
+                p += written;
+                continue;
+            }
+            if (written == -1 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK))
+                continue; // Don't want to miss some data to write
+            return -1;
+        }
+
+        return (ssize_t)bufferSize;
     }
 }
 

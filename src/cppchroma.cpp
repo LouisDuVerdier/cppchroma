@@ -4,6 +4,7 @@
 #include <absl/log/globals.h>
 #include <absl/log/initialize.h>
 #include "approxtimer.h"
+#include "colorizedoutput.h"
 #include "config.h"
 #include "epollhandler.h"
 #include "forkpty.h"
@@ -14,33 +15,11 @@ void printUsage()
     std::cout << "Usage: cppchroma <program> [args...]" << std::endl;
 }
 
-ssize_t writeAllToFd(int fd, const char *buf, size_t bufferSize)
-{
-    const char *p = buf;
-    size_t bytesLeft = bufferSize;
-
-    while (bytesLeft)
-    {
-        ssize_t written = write(fd, p, bytesLeft);
-        if (written > 0)
-        {
-            bytesLeft -= written;
-            p += written;
-            continue;
-        }
-        if (written == -1 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK))
-            continue; // Don't want to miss some data to write
-        return -1;
-    }
-
-    return (ssize_t)bufferSize;
-}
-
 int forwardStdinToMaster(int masterFd, char* buffer, size_t bufferSize)
 {
     ssize_t count = read(STDIN_FILENO, buffer, bufferSize);
     if (count > 0)
-        return writeAllToFd(masterFd, buffer, count);
+        return Helpers::writeAllToFd(masterFd, buffer, count);
     else if (count == 0) // EOF on stdin
         return -1;
     else if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -52,10 +31,7 @@ int readMasterFd(int masterFd, char* buffer, size_t bufferSize)
 {
     ssize_t count = read(masterFd, buffer, bufferSize);
     if (count > 0)
-    {
-        writeAllToFd(STDOUT_FILENO, buffer, count);
         return count;
-    }
     else if (count == 0) // EOF on masterFd
         return -1;
     else if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -93,7 +69,7 @@ int runImpl(int argc, char* argv[])
         }
     });
 
-    char buffer[8192];
+    char stdinBuffer[8192];
     bool stdinOpen = true;
     bool masterFdOpen = true;
 
@@ -103,14 +79,19 @@ int runImpl(int argc, char* argv[])
     epollHandler.addFd(masterFd, EPOLLIN | EPOLLRDHUP);
     epollHandler.addFd(STDIN_FILENO, EPOLLIN | EPOLLRDHUP);
 
+    ColorizedOutput colorizedOutput(config);
+
     auto processEvents = [&](int fd, uint32_t events)
     {
         if (fd == masterFd)
         {
             if (events & EPOLLIN)
             {
-                ssize_t count = readMasterFd(masterFd, buffer, sizeof(buffer));
-                if (count < 0)
+                auto [bufferPtr, bufferSize] = colorizedOutput.getBuffer();
+                ssize_t count = readMasterFd(masterFd, bufferPtr, bufferSize);
+                if (count > 0)
+                    colorizedOutput.onDataAdded(count);
+                else if (count < 0)
                 {
                     masterFdOpen = false;
                     return false;
@@ -122,8 +103,11 @@ int runImpl(int argc, char* argv[])
                 // Drain any remaining data
                 while (true)
                 {
-                    ssize_t count = readMasterFd(masterFd, buffer, sizeof(buffer));
-                    if (count < 0)
+                    auto [bufferPtr, bufferSize] = colorizedOutput.getBuffer();
+                    ssize_t count = readMasterFd(masterFd, bufferPtr, bufferSize);
+                    if (count > 0)
+                        colorizedOutput.onDataAdded(count);
+                    else if (count < 0)
                         break;
                 }
 
@@ -133,7 +117,7 @@ int runImpl(int argc, char* argv[])
         }
         else if (fd == STDIN_FILENO && (events & EPOLLIN))
         {
-            ssize_t count = forwardStdinToMaster(masterFd, buffer, sizeof(buffer));
+            ssize_t count = forwardStdinToMaster(masterFd, stdinBuffer, sizeof(stdinBuffer));
             if (count < 0) // Done reading stdin
                 stdinOpen = false;
         }
@@ -152,6 +136,7 @@ int runImpl(int argc, char* argv[])
         }
     }
 
+    colorizedOutput.flush();
     cwdTimer.stop();
 
     return forkPtyHelper.waitPid();

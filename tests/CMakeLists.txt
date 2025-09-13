@@ -11,6 +11,7 @@ macro(register_test TESTNAME)
 endmacro()
 
 set(COMMON_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/colorizedoutput.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/config.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/cppchroma.cpp
 )
