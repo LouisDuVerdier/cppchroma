@@ -1,7 +1,10 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <absl/log/globals.h>
+#include <absl/log/initialize.h>
 #include "approxtimer.h"
+#include "config.h"
 #include "epollhandler.h"
 #include "forkpty.h"
 #include "helpers.h"
@@ -60,13 +63,16 @@ int readMasterFd(int masterFd, char* buffer, size_t bufferSize)
     return -1;
 }
 
-int run(int argc, char* argv[])
+int runImpl(int argc, char* argv[])
 {
     if (argc < 2)
     {
         printUsage();
         return EXIT_SUCCESS;
     }
+
+    Config config;
+    config.load();
 
     ForkPtyHelper forkPtyHelper;
     auto [pid, masterFd] = forkPtyHelper.forkAndExec(argv[1], &argv[1]);
@@ -149,4 +155,27 @@ int run(int argc, char* argv[])
     cwdTimer.stop();
 
     return forkPtyHelper.waitPid();
+}
+
+int run(int argc, char* argv[])
+{
+    // Silence warnings when loading regex configuration
+    absl::InitializeLog();
+    absl::SetStderrThreshold(absl::LogSeverity::kFatal);
+
+    try
+    {
+        return runImpl(argc, argv);
+    }
+    catch (const std::exception &e)
+    {
+        LOG_ERROR(e.what());
+        return EXIT_FAILURE;
+    }
+    catch (...)
+    {
+        LOG_ERROR("cppchroma failed due to unknown exception");
+    }
+
+    return EXIT_FAILURE;
 }

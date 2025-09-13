@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
-#include "../src/cppchroma.cpp"
+
+int run(int argc, char* argv[]);
 
 TEST(MainTest, ExternalProgramCall)
 {

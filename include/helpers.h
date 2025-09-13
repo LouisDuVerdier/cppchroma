@@ -12,7 +12,7 @@
 #if USE_LOG_DEBUG
 # define LOG_DEBUG(log) \
     do { \
-        std::cout << __FILE__ << ":" << __LINE__ << " " << log << std::endl; \
+        std::cout << __FILE__ << ":" << __LINE__ << ": " << log << std::endl; \
     } while (0)
 #else
 # define LOG_DEBUG(log) \
@@ -21,12 +21,12 @@
 
 #define LOG_ERROR(log) \
     do { \
-        std::cerr << __FILE__ << ":" << __LINE__ << " " << log << std::endl; \
+        std::cerr << __FILE__ << ":" << __LINE__ << ": " << log << std::endl; \
     } while (0)
 
 #define LOG_PERROR(log) \
     do { \
-        std::cerr << __FILE__ << ":" << __LINE__ << " " << log << ": " << std::strerror(errno) << std::endl; \
+        std::cerr << __FILE__ << ":" << __LINE__ << ": " << log << ": " << std::strerror(errno) << std::endl; \
     } while (0)
 
 namespace Helpers

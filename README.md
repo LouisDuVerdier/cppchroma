@@ -6,7 +6,7 @@ It is meant to work on Linux-like systems.
 
 Colorization is done through Google's RE2 regex library.
 
-Greatly inspired by https://github.com/hSaria/ChromaTerm/, but designed to be faster.
+Greatly inspired by https://github.com/hSaria/ChromaTerm/ that is now archived, but designed to be faster.
 
 ## Setup Instructions
 
@@ -27,3 +27,11 @@ For example to colorize the output of a bash session:
 ```
 ./cppchroma bash
 ```
+
+## Configuration
+
+At first run, a `~/.cppchroma_config.yaml` file is created, containing a default configuration that you may modify according to your needs.
+
+You may set `CPPCHROMA_CONFIG_PATH` environment variable to load a custom path instead.
+
+**Note:** RE2 library only supports limited range of regex features. Its syntax may be found here: https://github.com/google/re2/wiki/Syntax. Multiple online tools are available to tests RE2 syntax, in case you wish to add your own rules.
