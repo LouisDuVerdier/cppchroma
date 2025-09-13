@@ -27,7 +27,3 @@ For example to colorize the output of a bash session:
 ```
 ./cppchroma bash
 ```
-
-## Limitations
-
-Depending on the system, cppchroma may have issues reading the full output of the `<command>` after it finishes. This is due to EIO error being received before the fd of the forkpty() gets fully drained. There is no available workaround for now, but remains a rare case. If running for example a bash or similar session, that shouldn't be an issue.

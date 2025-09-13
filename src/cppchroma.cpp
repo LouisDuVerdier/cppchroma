@@ -117,7 +117,7 @@ int run(int argc, char* argv[])
                 while (true)
                 {
                     ssize_t count = readMasterFd(masterFd, buffer, sizeof(buffer));
-                    if (count <= 0 || errno == EAGAIN || errno == EWOULDBLOCK)
+                    if (count < 0)
                         break;
                 }
 
