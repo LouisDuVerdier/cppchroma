@@ -70,7 +70,7 @@ int runImpl(int argc, char* argv[])
     });
 
     char stdinBuffer[8192];
-    bool stdinOpen = true;
+    bool stdinJustClosed = false;
     bool masterFdOpen = true;
 
     Helpers::setNonBlocking(STDOUT_FILENO);
@@ -119,7 +119,7 @@ int runImpl(int argc, char* argv[])
         {
             ssize_t count = forwardStdinToMaster(masterFd, stdinBuffer, sizeof(stdinBuffer));
             if (count < 0) // Done reading stdin
-                stdinOpen = false;
+                stdinJustClosed = false;
         }
 
         return true;
@@ -129,10 +129,10 @@ int runImpl(int argc, char* argv[])
     {
         epollHandler.poll(processEvents, -1);
 
-        if (!stdinOpen)
+        if (stdinJustClosed)
         {
             epollHandler.removeFd(STDIN_FILENO);
-            stdinOpen = false;
+            stdinJustClosed = false;
         }
     }
 
