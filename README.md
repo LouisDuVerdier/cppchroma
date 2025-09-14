@@ -12,7 +12,7 @@ An example of config would be to set the default command to run on VSCode termin
 
 For safety and efficiency reasons, colorization is done through Google's RE2 regex library, which is slightly more limited than what is covered by regular regex engines, but that should cover most cases.
 
-This project was greatly inspired by https://github.com/hSaria/ChromaTerm/ that is now archived, but designed to be faster. The goal of cppchroma was to be able to work on sessions where apps may be printing lots of logs, without impacting their speed (I/O throttling). With the default config, cppchroma adds very little overhead compared to the same commands ran without it, and is at least 10 times faster than ChromaTerm, even with its --pcre option.
+This project was greatly inspired by https://github.com/hSaria/ChromaTerm/ that is now archived, but designed to be faster. The goal of cppchroma was to be able to work on sessions where apps may be printing lots of logs, without impacting their speed (I/O throttling). With the default config, cppchroma adds very little overhead compared to the same commands ran without it, and is at least 10 times faster than ChromaTerm, even with its --pcre option, when system I/O speed is not the bottleneck.
 
 ## Setup Instructions
 
