@@ -119,7 +119,7 @@ int runImpl(int argc, char* argv[])
         {
             ssize_t count = forwardStdinToMaster(masterFd, stdinBuffer, sizeof(stdinBuffer));
             if (count < 0) // Done reading stdin
-                stdinJustClosed = false;
+                stdinJustClosed = true;
         }
 
         return true;
