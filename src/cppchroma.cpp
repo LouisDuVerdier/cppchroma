@@ -17,29 +17,13 @@ void printUsage()
 
 int forwardStdinToMaster(int masterFd, char* buffer, size_t bufferSize)
 {
-    ssize_t count = read(STDIN_FILENO, buffer, bufferSize);
+    ssize_t count = Helpers::readNonBlockingFd(STDIN_FILENO, buffer, bufferSize);
     if (count > 0)
         return Helpers::writeAllToFd(masterFd, buffer, count);
-    else if (count == 0) // EOF on stdin
-        return -1;
-    else if (errno == EAGAIN || errno == EWOULDBLOCK)
-        return 0; // Maybe later
-    return -1;
+    return count;
 }
 
-int readMasterFd(int masterFd, char* buffer, size_t bufferSize)
-{
-    ssize_t count = read(masterFd, buffer, bufferSize);
-    if (count > 0)
-        return count;
-    else if (count == 0) // EOF on masterFd
-        return -1;
-    else if (errno == EAGAIN || errno == EWOULDBLOCK)
-        return 0; // Maybe later
-    return -1;
-}
-
-int runImpl(int argc, char* argv[])
+int run(int argc, char* argv[])
 {
     if (argc < 2)
     {
@@ -88,7 +72,7 @@ int runImpl(int argc, char* argv[])
             if (events & EPOLLIN)
             {
                 auto [bufferPtr, bufferSize] = colorizedOutput.getBuffer();
-                ssize_t count = readMasterFd(masterFd, bufferPtr, bufferSize);
+                ssize_t count = Helpers::readNonBlockingFd(masterFd, bufferPtr, bufferSize);
                 if (count > 0)
                     colorizedOutput.onDataAdded(count);
                 else if (count < 0)
@@ -104,7 +88,7 @@ int runImpl(int argc, char* argv[])
                 while (true)
                 {
                     auto [bufferPtr, bufferSize] = colorizedOutput.getBuffer();
-                    ssize_t count = readMasterFd(masterFd, bufferPtr, bufferSize);
+                    ssize_t count = Helpers::readNonBlockingFd(masterFd, bufferPtr, bufferSize);
                     if (count > 0)
                         colorizedOutput.onDataAdded(count);
                     else if (count < 0)
@@ -127,7 +111,8 @@ int runImpl(int argc, char* argv[])
 
     while (masterFdOpen)
     {
-        epollHandler.poll(processEvents, -1);
+        epollHandler.poll(processEvents, colorizedOutput.hasPendingData() ? ColorizedOutput::BUFFERING_DELAY_MSEC : -1);
+        colorizedOutput.flushIfTimedOut();
 
         if (stdinJustClosed)
         {
@@ -142,7 +127,7 @@ int runImpl(int argc, char* argv[])
     return forkPtyHelper.waitPid();
 }
 
-int run(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     // Silence warnings when loading regex configuration
     absl::InitializeLog();
@@ -150,7 +135,7 @@ int run(int argc, char* argv[])
 
     try
     {
-        return runImpl(argc, argv);
+        return run(argc, argv);
     }
     catch (const std::exception &e)
     {

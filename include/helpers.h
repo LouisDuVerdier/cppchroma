@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cerrno>
 #include <cstring>
+#include <chrono>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdexcept>
@@ -34,6 +35,11 @@ namespace Helpers
     template<typename T>
     inline void unused(const T &&) {}
 
+    inline int64_t getSteadyTimeInMsecs()
+    {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
+
     inline void setNonBlocking(int fd)
     {
         int flags = fcntl(fd, F_GETFL);
@@ -43,9 +49,21 @@ namespace Helpers
             throw std::runtime_error("fcntl F_SETFL O_NONBLOCK failed");
     }
 
-    inline ssize_t writeAllToFd(int fd, const char *buf, size_t bufferSize)
+    inline ssize_t readNonBlockingFd(int fd, char *buffer, size_t bufferSize)
     {
-        const char *p = buf;
+        ssize_t count = read(fd, buffer, bufferSize);
+        if (count > 0)
+            return count;
+        else if (count == 0) // EOF on fd
+            return -1;
+        else if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return 0; // Maybe later
+        return -1;
+    }
+
+    inline ssize_t writeAllToFd(int fd, const char *buffer, size_t bufferSize)
+    {
+        const char *p = buffer;
         size_t bytesLeft = bufferSize;
 
         while (bytesLeft)

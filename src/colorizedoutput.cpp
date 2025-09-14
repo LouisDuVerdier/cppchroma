@@ -3,6 +3,21 @@
 #include "colorizedoutput.h"
 #include "helpers.h"
 
+static constexpr std::array<bool, 256> makeSeparators()
+{
+    std::array<bool, 256> separators{};
+
+    for (size_t i = 0; i < separators.size(); ++i)
+        separators[i] = false;
+
+    separators[' ']  = true;
+    separators['\t'] = true;
+    separators['\n'] = true;
+    separators['\r'] = true;
+
+    return separators;
+}
+
 ColorizedOutput::ColorizedOutput(const Config &config)
     : _rules(config.rules())
 {
@@ -12,16 +27,48 @@ ColorizedOutput::ColorizedOutput(const Config &config)
 void ColorizedOutput::onDataAdded(size_t dataSize)
 {
     _bufferLen += dataSize;
-    process(_bufferLen); // May want to limit how much we process, to avoid truncated matches
+
+    if (_bufferLen > 0)
+    {
+        auto getProcessableDataSize = [this]()
+        {
+            constexpr auto separators = makeSeparators();
+
+            for (int i = (int)_bufferLen - 1; i >= 0; --i)
+            {
+                if (separators[(uint8_t)_buffer[i]])
+                    return i + 1;
+            }
+
+            return 0;
+        };
+
+        // Compute until last separator if possible
+        process(getProcessableDataSize());
+
+        // There is still data in the buffer, flush later
+        if (_bufferLen > 0)
+            _nextFlushTime = Helpers::getSteadyTimeInMsecs() + BUFFERING_DELAY_MSEC;
+    }
+}
+
+void ColorizedOutput::flushIfTimedOut()
+{
+    if (_bufferLen > 0 && Helpers::getSteadyTimeInMsecs() >= _nextFlushTime)
+        flush();
 }
 
 void ColorizedOutput::flush()
 {
     process(_bufferLen);
+    _nextFlushTime = std::numeric_limits<int64_t>::max();
 }
 
 void ColorizedOutput::process(size_t dataSize)
 {
+    if (dataSize == 0)
+        return;
+
     _matches.clear();
 
     std::string_view contents{_buffer.data(), dataSize};

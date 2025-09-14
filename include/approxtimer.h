@@ -53,6 +53,6 @@ public:
     }
 
 private:
-    std::atomic_bool _stopped{false};
+    std::atomic_bool _stopped{true};
     std::thread *_thread = nullptr;
 };

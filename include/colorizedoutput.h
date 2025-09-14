@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <limits>
 #include "config.h"
 
 class ColorizedOutput
@@ -16,10 +17,16 @@ class ColorizedOutput
     };
 
 public:
+    // 5msec before flushing the tail of the buffer, to give time for new data to come in
+    static constexpr size_t BUFFERING_DELAY_MSEC = 5;
+
     ColorizedOutput(const Config &config);
 
     std::pair<char *, size_t> getBuffer() { return {_buffer.data() + _bufferLen, _buffer.size() - _bufferLen}; }
+    bool hasPendingData() const { return _bufferLen > 0; }
     void onDataAdded(size_t dataSize);
+
+    void flushIfTimedOut();
     void flush();
 
 private:
@@ -32,4 +39,5 @@ private:
 
     std::array<char, MAX_BUFFER_SIZE> _buffer;
     size_t _bufferLen = 0;
+    int64_t _nextFlushTime = std::numeric_limits<int64_t>::max();
 };

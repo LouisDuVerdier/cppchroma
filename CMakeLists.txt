@@ -14,7 +14,6 @@ include(cmake/yamlcpp.cmake)
 
 include_directories(include)
 add_executable(cppchroma
-    src/main.cpp
     src/colorizedoutput.cpp
     src/config.cpp
     src/cppchroma.cpp
