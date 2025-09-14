@@ -12,7 +12,7 @@ static constexpr std::string_view DEFAULT_CONFIG_STR = R"EOF(rules:
   color: f#E666FB
 
 - description: Error
-  regex: (?i)\b(password|abnormal(ly)?|down|los(t|ing)|err(ors?)?|(den(y|ies|ied)?)|reject(ing|ed)?|drop(ped|s)?|(err\-)?disabled?|(timed?\-?out)|fail(s|ed|iure)?|disconnect(ed)?|unreachable|invalid|bad|notconnect|unusable|block(ed|ing)?|blk|inaccessible|wrong|collisions?|unsynchronized|mismatch|runts)\b
+  regex: (?i)\b(password|abnormal(ly)?|down|los(t|ing)|err(ors?)?|(den(y|ies|ied)?)|reject(ing|ed)?|drop(ped|s)?|(err\-)?disabled?|(timed?\-?out)|fail(s|ed|iure)?|disconnect(ed)?|unreachable|refused|invalid|bad|notconnect|unusable|block(ed|ing)?|blk|inaccessible|wrong|collisions?|unsynchronized|mismatch|runts)\b
   color: f#F44336
 
 - description: Warning
