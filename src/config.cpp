@@ -29,7 +29,7 @@ void Config::load()
     if (_configPath.empty())
     {
         _configPath = std::string(getenv("HOME") ? getenv("HOME") : ".") + "/.cppchroma_config.yaml";
-        writeDefaultConfig();
+        writeDefaultConfig(_configPath);
     }
 
     try
@@ -72,9 +72,9 @@ void Config::loadFromFile(const std::string &path)
     }
 }
 
-void Config::writeDefaultConfig()
+void Config::writeDefaultConfig(const std::string &path)
 {
-    std::ofstream configFile(_configPath);
+    std::ofstream configFile(path);
     if (configFile)
     {
         configFile << DEFAULT_CONFIG_STR;

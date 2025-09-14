@@ -25,12 +25,13 @@ public:
 
     void load();
 
+    static void writeDefaultConfig(const std::string &path);
+
     const std::vector<RulePtr> &rules() const { return _rules; }
     const std::string &configPath() const { return _configPath; }
 
 private:
     void loadFromFile(const std::string &path);
-    void writeDefaultConfig();
     std::string toAnsiColor(const std::string &colorStr) const;
 
 private:
