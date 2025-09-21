@@ -26,7 +26,7 @@ add_executable(cppchroma
     src/cppchroma.cpp
 )
 target_compile_options(cppchroma PRIVATE -W -Wall -Wextra -g)
-target_link_libraries(cppchroma PRIVATE re2::re2 yaml-cpp::yaml-cpp absl::log absl::log_initialize)
+target_link_libraries(cppchroma PRIVATE re2::re2 yaml-cpp::yaml-cpp absl::log absl::log_initialize util)
 
 # Add tests
 enable_testing()
